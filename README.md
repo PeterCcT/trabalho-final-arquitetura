@@ -1,4 +1,4 @@
-##Introdução
+## Introdução
 
 Criado em 2015, o Discord é uma plataforma web e mobile focada em comunicação de grupos, que possui uma arquitetura distribuída e escalável. Algumas de suas features principais são as chamadas de voz, assim como o envio de mensagens. Nesse site você conhecerá um pouco mais sobre a arquitetura do sistema assim como detalhes sobre a mesma, divirta-se!
 
