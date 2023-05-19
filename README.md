@@ -1,8 +1,10 @@
 ## Introdução
 
-Criado em 2015, o Discord é uma plataforma web e mobile focada em comunicação de grupos, que possui uma arquitetura distribuída e escalável. Algumas de suas features principais são as chamadas de voz, assim como o envio de mensagens. Nesse site você conhecerá um pouco mais sobre a arquitetura do sistema assim como detalhes sobre a mesma, divirta-se!
+Criado em 2015, o Discord é uma plataforma web e mobile focada em comunicação de grupos, que possui uma arquitetura distribuída e escalável. Algumas de suas features principais são as chamadas de voz, assim como o envio de mensagens. Em 2020, o sistema possuía mais de 300 milhões de usuários registrados. Todos os dias, são gastos o equivalente a 4 bilhões de minutos com envio de mensagens de texto e chamadas de voz ou de vídeo.
 
-Aqui, nós utilizaremos o termo "guilda" (Guild, em inglês) para referir ao conjunto de usuários, que são chamados de "servidores" no cliente da aplicação. Portanto, "servidores" nesse site se referem ao conceito de engenharia de software.
+Nesse site você conhecerá um pouco mais sobre a arquitetura do sistema assim como detalhes sobre a mesma, divirta-se!
+
+Nota: Aqui, nós utilizaremos o termo "guilda" (Guild, em inglês) para referir ao conjunto de usuários, que são chamados de "servidores" no cliente da aplicação. Portanto, "servidores" nesse site se referem ao conceito de engenharia de software.
 
 ## Visão geral
 
@@ -36,5 +38,7 @@ Com a disponibilização de 850 servidores distribuídos geograficamente mencion
 
 ## Referências
 
-Discord Blog. Disponível em: https://discord.com/blog/. Acesso em maio de 2023
+_Discord Blog. Disponível em: https://discord.com/blog/. Acesso em maio de 2023_
+
+_BROWN, Abram. Disponível em: https://www.forbes.com/sites/abrambrown/2020/06/30/discord-was-once-the-alt-rights-favorite-chat-app-now-its-gone-mainstream-and-scored-a-new-35-billion-valuation/. Acesso em maio de 2023_
 
