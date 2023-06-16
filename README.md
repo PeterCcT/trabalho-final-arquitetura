@@ -1,3 +1,11 @@
+## Autores
+
+Júlia Evelyn de Oliveira Silva
+Letícia de Assis Fraga
+Matheus Nolasco Miranda Soares
+Pedro Henrique Rodrigues Ferreira
+Vinícius Levi Viana de Oliveira
+
 ## Introdução
 
 Criado em 2015, o Discord é uma plataforma web e mobile focada em comunicação de grupos, que possui uma arquitetura distribuída e escalável. Algumas de suas features principais são as chamadas de voz, assim como o envio de mensagens. Em 2020, o sistema possuía mais de 300 milhões de usuários registrados. Todos os dias, são gastos o equivalente a 4 bilhões de minutos com envio de mensagens de texto e chamadas de voz ou de vídeo.
