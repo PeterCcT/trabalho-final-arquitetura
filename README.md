@@ -1,10 +1,10 @@
 ## Autores
 
-Júlia Evelyn de Oliveira Silva
-Letícia de Assis Fraga
-Matheus Nolasco Miranda Soares
-Pedro Henrique Rodrigues Ferreira
-Vinícius Levi Viana de Oliveira
+Júlia Evelyn de Oliveira Silva <br/>
+Letícia de Assis <br/>
+Fraga Matheus Nolasco Miranda Soares <br/>
+Pedro Henrique Rodrigues Ferreira <br/>
+Vinícius Levi Viana de Oliveira <br/>
 
 ## Introdução
 
