@@ -26,11 +26,16 @@ Existem 3 serviços principais na arquitetura do Discord: Discord Gateway, Disco
 
 O Discord mantém a performance de sua aplicação mesmo após a evolução de seu software. Mas como isso é feito? A equipe de desenvolvimento utiliza uma abordagem iterativa e focada na melhoria contínua.
 
-Uma das estratégias adotadas para manter a performance é a otimização do código e dos algoritmos utilizados. Eles procuram constantemente maneiras de tornar o software mais eficiente e rápido, reduzindo o tempo de carregamento e resposta em diferentes áreas da plataforma. Utilizam uma metodologia chamada Code Splitting, que consiste em carregar o código conforme a demanda.
+Uma das estratégias adotadas para manter a performance é a otimização do código e dos algoritmos utilizados. Eles procuram constantemente maneiras de tornar o software mais eficiente e rápido, reduzindo o tempo de carregamento e resposta em diferentes áreas da plataforma.
+
+Eles utilizam uma metodologia chamada Code Splitting, que consiste em carregar o código conforme a demanda. Na maioria dos casos, ao carregar uma página, todo o código dela é executada no momento do acesso, porém isso diminui a performance do sistema a medida em que ele evolui.
 
 A equipe de desenvolvimento também realiza monitoramento constante do desempenho da aplicação, utilizando métricas e ferramentas de análise para identificar possíveis gargalos e problemas de desempenho. Dessa forma, eles podem agir rapidamente para corrigir essas questões e melhorar a experiência do usuário.
 
 No geral, o Discord adota uma abordagem abrangente para garantir a performance de sua aplicação, combinando otimizações técnicas, arquitetura escalável, monitoramento constante e testes rigorosos. Isso permite que os usuários desfrutem de uma experiência suave e responsiva ao utilizar a plataforma.
+
+![Code Splitting](https://github.com/PeterCcT/trabalho-final-arquitetura/assets/72523562/15548566-b78e-4ef5-b32f-0a7217a43397)
+
 
 ## Escalabilidade
 
