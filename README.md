@@ -22,6 +22,12 @@ Existem 3 serviços principais na arquitetura do Discord: Discord Gateway, Disco
 - Discord Guilds: Gerenciam informações relacionadas às guildas, como membros, canais e permissões de usuários. Cada guilda possui seus próprios canais de texto e voz, membros e configurações personalizadas.
 - Discord Voice: Permite a comunicação de voz em tempo real. Gerencia a codificação e decodificação de áudio, a sincronização de voz entre os participantes e o roteamento do áudio entre os usuários.
 
+Quando um usuário está online, o cliente mantém uma conexão WebSocket com a Discord Gateway. O cliente recebe eventos relacionados a guildas, canais, mensagens, presença, etc., por meio dessa conexão.
+
+Quando ele se conecta a um canal de voz, o status da conexão é representado pelo [objeto de state de voz](https://discord.com/developers/docs/resources/voice). O cliente atualiza o state de voz usando a conexão WebSocket do gateway e o usuário é atribuído a um servidor Discord Voice, que é responsável por transmitir o áudio de cada membro para o canal. Todos os canais de voz dentro de uma guilda são atribuídos ao mesmo servidor Discord Voice. Se o usuário é o primeiro participante de voz na guilda, o Discord Guilds é responsável por atribuir um servidor à guilda.
+
+![Arquitetura geral](/general-architecture.png)
+
 ## Requisitos
 
 Para atender os 3 serviços sem correr o risco da aplicação falhar em algum aspecto, foram elegidos alguns requisitos importantes para o funcionamento do Discord. São eles:
@@ -95,6 +101,9 @@ Em relação aos serviços disponibilizados para os usuários, mais de 850 servi
 
 Com a disponibilização de 850 servidores distribuídos geograficamente mencionada anteriormente, o sistema fornece redundância para lidar com falhas e ataques DDoS a servidores (ateques que sobrecarregam a aplicação para deixar o serviço indisponível). Além disso, o a distribuição permite que os clientes tenham acesso aos serviços com uma latência menor.
 
+A imagem abaixo ilustra a redundância do Discord Voice. Quando um servidor de voz do Discord falha, ele falha no ping periódico. O cliente percebe a falha do servidor devido à conexão WebSocket interrompida e solicita um ping de servidor de voz por meio da conexão WebSocket do gateway. O Discord Guilds confirma a falha e atribui um novo servidor de Discord Voice para a guilda. O Discord Guilds então envia todos os objetos de estado de voz para o novo servidor de voz. Todos os clientes são notificados sobre o novo servidor de voz e criam uma conexão WebSocket com o novo servidor.
+
+![Tolerância a falhas](https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/612402ed42d2a34c22a0b203_1*cwbQeQWz8eofvEYpK_KwhA.gif)
 ## Referências
 
 _BROWN, Abram. Discord Was Once The Alt-Right’s Favorite Chat App. Now It’s Gone Mainstream And Scored A New $3.5 Billion Valuation. Disponível em: https://www.forbes.com/sites/abrambrown/2020/06/30/discord-was-once-the-alt-rights-favorite-chat-app-now-its-gone-mainstream-and-scored-a-new-35-billion-valuation/. Acesso em maio de 2023_
