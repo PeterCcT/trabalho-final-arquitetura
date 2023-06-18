@@ -1,8 +1,7 @@
-
 ## Autores
 
 Júlia Evelyn de Oliveira Silva <br/>
-Letícia de Assis <br/>
+Letícia de Assis Fraga <br/>
 Fraga Matheus Nolasco Miranda Soares <br/>
 Pedro Henrique Rodrigues Ferreira <br/>
 Vinícius Levi Viana de Oliveira <br/>
@@ -24,16 +23,17 @@ Existem 3 serviços principais na arquitetura do Discord: Discord Gateway, Disco
 - Discord Voice: Permite a comunicação de voz em tempo real. Gerencia a codificação e decodificação de áudio, a sincronização de voz entre os participantes e o roteamento do áudio entre os usuários.
 
 ## Requisitos
+
 Para atender os 3 serviços sem correr o risco da aplicação falhar em algum aspecto, foram elegidos alguns requisitos importantes para o funcionamento do Discord. São eles:
 
- - Armazenamento
-	 - O usuário deve ser capaz de encontrar qualquer mensagem que já tenha sido enviada em suas conversas, independente da data de envio ser antiga ou não.
- - Performance
-	 - O usuário deve ser capaz de manter uma conversa em uma chamada sem se preocupar com a quantidade de usuários que estão participando e outros fatores que possam prejudicar o funcionamento da plataforma e sua experiência, seja ela casual, gamer ou profissional.
- - Escalabilidade
-	 - Os milhões de usuários devem ser capazes de realizar múltiplas tarefas simultaneamente ser se preocupar com a performance da plataforma.
- - Tolerância a falhas
-	 - Os usuários devem utilizar a plataforma sem se preocupar com a segurança dos seus dados ou o perigo de ocorrer um vazamento das suas conversas e informações, além de poder utilizar sem se preocupar com bugs e outros impedimentos para sua experiência.
+- Armazenamento
+  - O usuário deve ser capaz de encontrar qualquer mensagem que já tenha sido enviada em suas conversas, independente da data de envio ser antiga ou não.
+- Performance
+  - O usuário deve ser capaz de manter uma conversa em uma chamada sem se preocupar com a quantidade de usuários que estão participando e outros fatores que possam prejudicar o funcionamento da plataforma e sua experiência, seja ela casual, gamer ou profissional.
+- Escalabilidade
+  - Os milhões de usuários devem ser capazes de realizar múltiplas tarefas simultaneamente ser se preocupar com a performance da plataforma.
+- Tolerância a falhas
+  - Os usuários devem utilizar a plataforma sem se preocupar com a segurança dos seus dados ou o perigo de ocorrer um vazamento das suas conversas e informações, além de poder utilizar sem se preocupar com bugs e outros impedimentos para sua experiência.
 
 Nos tópicos abaixo, explicaremos melhor cada um dos requisitos, suas soluções e quais decisões do projeto levaram ao diagrama arquitetural final.
 
@@ -47,14 +47,27 @@ Deve-se lembrar que um dos requisitos do Discord é nunca apagar as mensagens en
 
 Como requisitos para a mudança de banco de dados e arquitetura, eles tinham como base a forma com as quais os usuários utilizavam a plataforma, e chegaram às seguintes conclusões:
 
- - Tanto a escrita como a leitura eram relevantes para o sistema, pensando nos usuários que usam o chat privado e chegam a enviar e receber de 100 mil mensagens a 1 milhão em um dia facilmente.
- - A busca não deveria ser mais custosa que o armazenamento em si.
- - O armazenamento deveria suportar bilhões de mensagens.
- - Não valeria a pena indexar mensagens de um chat caso os usuários não fizesse pelo menos uma busca de mensagens antigas
+- Tanto a escrita como a leitura eram relevantes para o sistema, pensando nos usuários que usam o chat privado e chegam a enviar e receber de 100 mil mensagens a 1 milhão em um dia facilmente.
+- A busca não deveria ser mais custosa que o armazenamento em si.
+- O armazenamento deveria suportar bilhões de mensagens.
+- Não valeria a pena indexar mensagens de um chat caso os usuários não fizesse pelo menos uma busca de mensagens antigas
 
 Como solução, eles escolheram utilizar o Cassandra, elasticsearch, e a modelagem de dados KKV, de forma que a chave primária seria composta por dois valores: channel_id e message_id.
 
-Por fim e até os dias atuais, chegando em trilhões de mensagens a serem armazenadas, em 2020 chegaram à conclusão que o Cassandra já não atendia mais os seus requisitos. Assim sendo, migraram todos os seus sistemas para Scylla DB, mantendo sua modelagem anterior KKV. Dessa forma, foi possível alcançar a evolução de 99% das pesquisas de mensagens antigas (read) que antes duravam entre 40ms e 125ms no Cassandra, agora duram 15ms de latência, e o armazenamento de mensagens no banco (write) que durava entre 5ms e 70ms, agora se mantêm em 5ms.
+Por fim e até os dias atuais, chegando em trilhões de mensagens a serem armazenadas, em 2020 chegaram à conclusão que o Cassandra já não atendia mais os seus requisitos. O Cassandra passou a ter problemas de performance, tornando a latência imprevisível para os usuários, além de apresentar manutenção custosa.
+
+![Cassandra DB](/db-old.png)
+
+
+Por isso, o Discord migrou todos os seus sistemas para ScyllaDB, mantendo sua modelagem anterior KKV. Para isso, outra decisão tomada foi a escolha de Rust para a escrita dos novos serviços de dados, que são intermediários entre a API e os clusters de ScyllaDB. O Rust, além de ser uma boa linguagem de programação em termos de segurança, bibliotecas e compilador que mostra mensagens claras, tem a concorrência como um de seus maiores benefícios, por isso se vários usuários estiverem solicitando a mesma informação do banco ao mesmo tempo, a consulta será feita apenas uma vez, como ilustrado na imagem abaixo.
+
+O primeiro usuário que fizer uma solicitação fará com que uma task seja iniciada no serviço de dados, e as solicitações seguintes verificarão a existência dessa tarefa e se inscreverão nela. A task consultará o banco de dados e retornará a informação para todos os inscritos. Esse comportamento é interessante, por exemplo, em uma guilda grande que dispara uma mensagem para todos os usuários. Todos os usuários, assim que receberem a mensagem, podem ler, disparando vários requests ao mesmo tempo para o serviço de banco de dados. Nesse caso, concorrência reduz a quantidade de tráfego gerada no banco.
+
+![Rust concurrency](https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/6406629e7ba3569d3c32c8ed_Example%201%402x.png)
+
+Dessa forma, foi possível alcançar a evolução de 99% das pesquisas de mensagens antigas (read) que antes duravam entre 40ms e 125ms no Cassandra, agora duram 15ms de latência, e o armazenamento de mensagens no banco (write) que durava entre 5ms e 70ms, agora se mantém em 5ms.
+
+![Migration](/db-migration.png)
 
 ## Performance
 
@@ -70,10 +83,9 @@ No geral, o Discord adota uma abordagem abrangente para garantir a performance d
 
 ![Code Splitting](https://github.com/PeterCcT/trabalho-final-arquitetura/assets/72523562/15548566-b78e-4ef5-b32f-0a7217a43397)
 
-
 ## Escalabilidade
 
-O discord foi criado, desde seu protótipo, em [Elixir](https://elixir-lang.org/): uma linguagem de programação funcional que é executada na máquina virtual “Erlang VM”. O uso dessa linguagem foi fundamental para permitir a alta escalabilidade do Discord, já que ela é uma linguagem moderna, amigável e desenvolvida para aplicações que visam alta escalabilidade, visto que possibilita a execução de múltiplos processos simultaneamente sem comprometer a perfomance da aplicação. Além disso, ela fornece para o desenvolvedor um ambiente bem distribuído que facilita muito a escalabilidade horizontal, ideal para sistemas de rápido crescimento. 
+O discord foi criado, desde seu protótipo, em [Elixir](https://elixir-lang.org/): uma linguagem de programação funcional que é executada na máquina virtual “Erlang VM”. O uso dessa linguagem foi fundamental para permitir a alta escalabilidade do Discord, já que ela é uma linguagem moderna, amigável e desenvolvida para aplicações que visam alta escalabilidade, visto que possibilita a execução de múltiplos processos simultaneamente sem comprometer a perfomance da aplicação. Além disso, ela fornece para o desenvolvedor um ambiente bem distribuído que facilita muito a escalabilidade horizontal, ideal para sistemas de rápido crescimento.
 
 Como o Discord é um aplicativo de comunicação entre usuários, a velocidade é um requisito fundamental, e essa também foi a maior barreira que os desenvolvedores enfrentaram para alcançar a alta escalabilidade desejada. Com o uso do Elixir, foi possível dividir os processos de envio de mensagens em diversas fases diferentes, ao invés de apenas uma, e com isso, foi possível reduzir pela metade o tempo de resposta que tinham. Com isso eles conseguiram escalar facilmente enquanto mantiveram a excelência do sistema.
 
@@ -85,24 +97,24 @@ Com a disponibilização de 850 servidores distribuídos geograficamente mencion
 
 ## Referências
 
-_Discord Blog. Disponível em: https://discord.com/blog/. Acesso em maio de 2023_
+_BROWN, Abram. Discord Was Once The Alt-Right’s Favorite Chat App. Now It’s Gone Mainstream And Scored A New $3.5 Billion Valuation. Disponível em: https://www.forbes.com/sites/abrambrown/2020/06/30/discord-was-once-the-alt-rights-favorite-chat-app-now-its-gone-mainstream-and-scored-a-new-35-billion-valuation/. Acesso em maio de 2023_
 
-_BROWN, Abram. Disponível em: https://www.forbes.com/sites/abrambrown/2020/06/30/discord-was-once-the-alt-rights-favorite-chat-app-now-its-gone-mainstream-and-scored-a-new-35-billion-valuation/. Acesso em maio de 2023_
+_VASS, Jozsef. How Discord Handles Two and Half Million Concurrent Voice Users Using WebRTC. Disponível em: https://discord.com/blog/how-discord-handles-two-and-half-million-concurrent-voice-users-using-webrtc. Acesso em junho de 2023_
 
-_VASS, Jozsef. Disponível em: https://discord.com/blog/how-discord-handles-two-and-half-million-concurrent-voice-users-using-webrtc . Acesso em junho de 2023_
+_HOWARTH, Jesse. How Discord Handles Push Request Bursts of Over a Million per Minute with Elixir's GenStage. Disponível em: https://discord.com/blog/how-discord-handles-push-request-bursts-of-over-a-million-per-minute-with-elixirs-genstage. Acesso em junho de 2023_
 
-_HOWARTH, Jesse. Disponível em: https://discord.com/blog/how-discord-handles-push-request-bursts-of-over-a-million-per-minute-with-elixirs-genstage. Acesso em junho de 2023_
+_GREER, Michael. How Discord Maintains Performance While Adding Features. Disponível em: https://discord.com/blog/how-discord-maintains-performance-while-adding-features. Acesso em junho de 2023_
 
-_GREER, Michael. Disponível em: https://discord.com/blog/how-discord-maintains-performance-while-adding-features. Acesso em junho de 2023_
+_ARMSTRONG, Brian. How Discord Resizes 150 Million Images Every Day with Go and C. Disponível em: https://medium.com/discord-engineering/how-discord-resizes-150-million-images-every-day-with-go-and-c-c9e98731c65d. Acesso em junho de 2023_
 
-_ARMSTRONG, Brian. Disponível em: https://medium.com/discord-engineering/how-discord-resizes-150-million-images-every-day-with-go-and-c-c9e98731c65d. Acesso em junho de 2023_
+_VISHNEVSKIY, Stanislav. How Discord Scaled Elixir to 5,000,000 Concurrent Users. Disponível em: https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users. Acesso em junho de 2023_
 
-_VISHNEVSKIY, Stanislav. Disponível em: https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users. Acesso em junho de 2023_
+_CHEN, Donald. How Discord Made Android In-App Navigation Easier. Disponível em: https://discord.com/blog/how-discord-made-android-in-app-navigation-easier. Acesso em junho de 2023_
 
-_CHEN, Donald. Disponível em: https://discord.com/blog/how-discord-made-android-in-app-navigation-easier. Acesso em junho de 2023_
+_VISHNEVSKIY, Stanislav. How Discord Stores Billions of Messages. Disponível em: https://discord.com/blog/how-discord-stores-billions-of-messages. Acesso em junho de 2023_
 
-_VISHNEVSKIY, Stanislav. Disponível em: https://discord.com/blog/how-discord-stores-billions-of-messages. Acesso em junho de 2023_
+_INGRAM, Bo. How Discord Stores Trillions of Messages.Disponível em: https://discord.com/blog/how-discord-stores-trillions-of-messages. Acesso em junho de 2023_
 
-_INGRAM, Bo. Disponível em: https://discord.com/blog/how-discord-stores-trillions-of-messages. Acesso em junho de 2023_
+_LAM, Sahn. How Discord Stores Trillions of Messages. Disponível em: https://www.youtube.com/watch?v=O3PwuzCvAjI&ab_channel=ByteByteGo. Acesso em junho de 2023_
 
-_HEINZ, Jake. Disponível em: https://discord.com/blog/how-discord-indexes-billions-of-messages. Acesso em junho de 2023_
+_HEINZ, Jake. How Discord Indexes Billions of Messages. Disponível em: https://discord.com/blog/how-discord-indexes-billions-of-messages. Acesso em junho de 2023_
